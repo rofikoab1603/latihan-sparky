@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sparky Site & Extra Work Log</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+  <div class="max-w-lg mx-auto p-4 pb-16">
+    <!-- Header -->
+    <header class="bg-slate-900 text-white rounded-2xl p-5 mb-5 shadow">
+      <h1 class="text-xl font-bold">Sparky Field Log</h1>
+      <p class="text-slate-300 text-sm mt-1">Site Arrival & Extra Work Tracker</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="grid grid-cols-2 gap-2 bg-white p-1.5 rounded-xl shadow-sm mb-5">
+      <button id="tab-arrival" onclick="switchTab('arrival')" class="py-2.5 px-3 rounded-lg font-semibold text-sm bg-amber-500 text-slate-900 transition">
+        Today's Site
+      </button>
+      <button id="tab-extra" onclick="switchTab('extra')" class="py-2.5 px-3 rounded-lg font-semibold text-sm text-slate-600 hover:bg-slate-100 transition">
+        Log Extra Work
+      </button>
+    </div>
+
+    <!-- Alert Banner -->
+    <div id="status-box" class="hidden mb-4 p-3.5 rounded-xl text-sm font-medium"></div>
+
+    <!-- SECTION 1: TODAY'S SITE -->
+    <section id="section-arrival" class="space-y-5">
+      <form id="arrival-form" class="bg-white p-5 rounded-2xl shadow-sm space-y-4">
+        <h2 class="font-bold text-lg text-slate-900">Log Site Arrival</h2>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Worker Name *</label>
+          <input type="text" id="worker_name" required placeholder="e.g. Liam Carter"
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Site Name *</label>
+          <input type="text" id="arrival_site_name" required placeholder="e.g. Bondi Duplex Project"
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Site Address *</label>
+          <input type="text" id="site_address" required placeholder="e.g. 42 Campbell Parade, Bondi NSW"
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Arrival Time (Optional — defaults to now)</label>
+          <input type="datetime-local" id="arrived_at"
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <button type="submit" id="btn-arrival"
+          class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-xl transition">
+          Confirm Arrival
+        </button>
+      </form>
+
+      <!-- Recent Arrivals List -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="font-bold text-base">Recent Site Arrivals</h3>
+          <button onclick="loadArrivals()" class="text-xs text-amber-600 font-semibold">Refresh</button>
+        </div>
+        <div id="arrivals-list" class="space-y-3 text-sm text-slate-600">Loading...</div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: LOG EXTRA WORK -->
+    <section id="section-extra" class="hidden space-y-5">
+      <form id="extra-form" class="bg-white p-5 rounded-2xl shadow-sm space-y-4">
+        <h2 class="font-bold text-lg text-slate-900">Log Extra Work / Variation</h2>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Site Name *</label>
+          <input type="text" id="extra_site_name" required placeholder="e.g. Bondi Duplex Project"
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Builder / Supervisor Name *</label>
+          <input type="text" id="builder_name" required placeholder="e.g. Dave Wilson"
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Work Description *</label>
+          <textarea id="description" rows="3" required placeholder="Describe extra wiring, GPOs, or variation requested..."
+            class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Photo Evidence (Optional)</label>
+          <input type="file" id="photo_file" accept="image/*"
+            class="w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700" />
+        </div>
+
+        <button type="submit" id="btn-extra"
+          class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition">
+          Save Extra Work
+        </button>
+      </form>
+
+      <!-- Recent Extra Works List -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="font-bold text-base">Logged Extra Works</h3>
+          <button onclick="loadExtraWorks()" class="text-xs text-amber-600 font-semibold">Refresh</button>
+        </div>
+        <div id="extra-list" class="space-y-3 text-sm text-slate-600">Loading...</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // GANTI BAGIAN INI DENGAN PUBLISHABLE KEY ANDA DARI NOTEPAD
+    const SUPABASE_URL = 'https://etrziipbktrwbqbebzaz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_956AcwpVhWWxSVlfCctuVQ_fq-Z2PE3';
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function showStatus(message, isError = false) {
+      const box = document.getElementById('status-box');
+      box.textContent = message;
+      box.className = `mb-4 p-3.5 rounded-xl text-sm font-medium ${
+        isError ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'
+      }`;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 5000);
+    }
+
+    function switchTab(tab) {
+      const isArrival = tab === 'arrival';
+      document.getElementById('section-arrival').classList.toggle('hidden', !isArrival);
+      document.getElementById('section-extra').classList.toggle('hidden', isArrival);
+
+      document.getElementById('tab-arrival').className = isArrival
+        ? 'py-2.5 px-3 rounded-lg font-semibold text-sm bg-amber-500 text-slate-900 transition'
+        : 'py-2.5 px-3 rounded-lg font-semibold text-sm text-slate-600 hover:bg-slate-100 transition';
+
+      document.getElementById('tab-extra').className = !isArrival
+        ? 'py-2.5 px-3 rounded-lg font-semibold text-sm bg-amber-500 text-slate-900 transition'
+        : 'py-2.5 px-3 rounded-lg font-semibold text-sm text-slate-600 hover:bg-slate-100 transition';
+    }
+
+    // Submit Site Arrival
+    document.getElementById('arrival-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-arrival');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const arrivedInput = document.getElementById('arrived_at').value;
+      const payload = {
+        worker_name: document.getElementById('worker_name').value.trim(),
+        site_name: document.getElementById('arrival_site_name').value.trim(),
+        site_address: document.getElementById('site_address').value.trim(),
+      };
+      if (arrivedInput) {
+        payload.arrived_at = new Date(arrivedInput).toISOString();
+      }
+
+      const { error } = await db.from('site_arrivals').insert([payload]);
+      btn.disabled = false;
+      btn.textContent = 'Confirm Arrival';
+
+      if (error) {
+        showStatus('Error saving arrival: ' + error.message, true);
+      } else {
+        showStatus('Site arrival logged successfully!');
+        e.target.reset();
+        loadArrivals();
+      }
+    });
+
+    // Submit Extra Work + Photo Upload
+    document.getElementById('extra-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-extra');
+      btn.disabled = true;
+      btn.textContent = 'Uploading & Saving...';
+
+      let photoUrl = null;
+      const fileInput = document.getElementById('photo_file');
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const { error: uploadError } = await db.storage.from('photos').upload(fileName, file);
+
+        if (uploadError) {
+          btn.disabled = false;
+          btn.textContent = 'Save Extra Work';
+          showStatus('Photo upload failed: ' + uploadError.message, true);
+          return;
+        }
+        const { data: urlData } = db.storage.from('photos').getPublicUrl(fileName);
+        photoUrl = urlData.publicUrl;
+      }
+
+      const payload = {
+        site_name: document.getElementById('extra_site_name').value.trim(),
+        builder_name: document.getElementById('builder_name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        photo_url: photoUrl,
+      };
+
+      const { error } = await db.from('extra_works').insert([payload]);
+      btn.disabled = false;
+      btn.textContent = 'Save Extra Work';
+
+      if (error) {
+        showStatus('Error saving extra work: ' + error.message, true);
+      } else {
+        showStatus('Extra work logged successfully!');
+        e.target.reset();
+        loadExtraWorks();
+      }
+    });
+
+    async function loadArrivals() {
+      const container = document.getElementById('arrivals-list');
+      const { data, error } = await db
+        .from('site_arrivals')
+        .select('*')
+        .order('arrived_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        container.innerHTML = `<p class="text-red-600">Failed to load: ${error.message}</p>`;
+        return;
+      }
+      if (!data.length) {
+        container.innerHTML = `<p class="text-slate-400">No arrivals logged yet.</p>`;
+        return;
+      }
+      container.innerHTML = data.map(item => `
+        <div class="border border-slate-200 rounded-xl p-3">
+          <div class="font-semibold text-slate-900">${item.site_name}</div>
+          <div class="text-xs text-slate-500">${item.site_address}</div>
+          <div class="text-xs text-slate-600 mt-1">
+            Worker: <strong>${item.worker_name}</strong> • ${new Date(item.arrived_at).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadExtraWorks() {
+      const container = document.getElementById('extra-list');
+      const { data, error } = await db
+        .from('extra_works')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        container.innerHTML = `<p class="text-red-600">Failed to load: ${error.message}</p>`;
+        return;
+      }
+      if (!data.length) {
+        container.innerHTML = `<p class="text-slate-400">No extra work logged yet.</p>`;
+        return;
+      }
+      container.innerHTML = data.map(item => `
+        <div class="border border-slate-200 rounded-xl p-3 space-y-2">
+          <div class="flex justify-between items-start">
+            <div class="font-semibold text-slate-900">${item.site_name}</div>
+            <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-md">Builder: ${item.builder_name}</span>
+          </div>
+          <p class="text-slate-700">${item.description}</p>
+          ${item.photo_url ? `<img src="${item.photo_url}" alt="Evidence" class="w-full h-40 object-cover rounded-lg border" />` : ''}
+          <div class="text-xs text-slate-400">${new Date(item.created_at).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    loadArrivals();
+    loadExtraWorks();
+  </script>
+</body>
+</html>
